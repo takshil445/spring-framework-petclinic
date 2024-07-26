@@ -1,0 +1,19 @@
+# Name of the workflow
+name: 'Test Github Actions Working'
+
+#when will this workflow run - manually
+on:
+    workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: my-step
+        run: echo "Hello World!"
