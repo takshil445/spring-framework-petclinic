@@ -1,5 +1,6 @@
 name: Snyk SAST Scan
 
+# when to trigger this flow
 on:
   push:
     branches: [ main ]
@@ -7,34 +8,42 @@ on:
     branches: [ main ]
 
 jobs:
+  # 1st Job
   snyk-sast:
     name: Run Snyk SAST
     runs-on: ubuntu-latest
 
     steps:
+        # git checkout
       - name: Checkout repository
         uses: actions/checkout@v2
 
+        # create a new node project - npm init.
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
           node-version: '14'
 
+        # install npm libraries.
       - name: Install Snyk
         run: npm install -g snyk snyk-to-html
 
+        # authenticate to snyk
       - name: Authenticate Snyk
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         run: snyk auth $SNYK_TOKEN
 
-      - name: Run Snyk Code Test
+        # Scan the current git repository - SAST
+      - name: Run Snyk SAST Scan
         run: |
           snyk code test --json > snyk-code-report.json || true
 
+        # json to html conversion - SAST Report
       - name: Convert Snyk Report to HTML
         run: snyk-to-html -i snyk-code-report.json -o snyk-code-report.html
 
+        # upload both .json and .html files to -> github artifactory
       - name: Upload Snyk JSON Report
         uses: actions/upload-artifact@v2
         with:
@@ -46,13 +55,17 @@ jobs:
         with:
           name: snyk-code-report-html
           path: snyk-code-report.html
+
+        # Scan the current git repository - SCA
       - name: Run Snyk Open Source Test (SCA)
         run: |
           snyk test --json > snyk-sca-report.json || true
 
+        # json to html conversion - SCA Report
       - name: Convert Snyk SCA Report to HTML
         run: snyk-to-html -i snyk-sca-report.json -o snyk-sca-report.html
 
+        # upload both .json and .html files to -> github artifactory
       - name: Upload Snyk SCA JSON Report
         uses: actions/upload-artifact@v2
         with:
